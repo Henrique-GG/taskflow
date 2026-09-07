@@ -1,0 +1,34 @@
+name: Padrao de commits
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  conventional-commits:
+    name: Validar mensagens de commit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Conferir Conventional Commits
+        run: |
+          PADRAO='^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-z0-9._-]+\))?!?: .{1,72}$'
+          FALHOU=0
+          BASE="origin/${{ github.base_ref }}"
+          git fetch origin "${{ github.base_ref }}" --depth=50
+          for SHA in $(git rev-list "$BASE..HEAD" --no-merges); do
+            MSG=$(git log -1 --pretty=%s "$SHA")
+            if ! echo "$MSG" | grep -Pq "$PADRAO"; then
+              echo "::error::Commit fora do padrao -> $SHA: $MSG"
+              FALHOU=1
+            else
+              echo "ok -> $MSG"
+            fi
+          done
+          exit $FALHOU

@@ -1,0 +1,141 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  qualidade:
+    name: Lint, formatacao e tipos
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Checar formatacao
+        run: npm run format:check
+
+      - name: Rodar ESLint
+        run: npm run lint
+
+      - name: Checar tipos
+        run: npm run typecheck
+
+  testes:
+    name: Testes automatizados
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: taskflow
+          POSTGRES_PASSWORD: taskflow
+          POSTGRES_DB: taskflow_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U taskflow"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      DATABASE_URL: postgres://taskflow:taskflow@localhost:5432/taskflow_test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Rodar testes unitarios e de integracao
+        run: npm run test:coverage
+
+      - name: Publicar relatorio de cobertura
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 7
+
+  build:
+    name: Build da aplicacao
+    runs-on: ubuntu-latest
+    needs: [qualidade, testes]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Compilar TypeScript
+        run: npm run build
+
+      - name: Verificar se a aplicacao sobe
+        run: |
+          node dist/index.js &
+          PID=$!
+          for i in $(seq 1 15); do
+            if curl -sf http://localhost:3000/api/health > /dev/null; then
+              echo "Aplicacao respondeu ao health check."
+              kill $PID
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "A aplicacao nao respondeu ao health check."
+          kill $PID
+          exit 1
+
+      - name: Guardar artefato de build
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 7
+
+  seguranca:
+    name: Auditoria de dependencias
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: npm audit
+        run: npm audit --audit-level=high

@@ -1,0 +1,22 @@
+# Sobe o Postgres local para desenvolvimento e para os testes de integracao.
+# O container da aplicacao entra na entrega A2, junto com o Dockerfile.
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: taskflow-db
+    environment:
+      POSTGRES_USER: taskflow
+      POSTGRES_PASSWORD: taskflow
+      POSTGRES_DB: taskflow
+    ports:
+      - '5432:5432'
+    volumes:
+      - taskflow-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U taskflow']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  taskflow-db-data:
