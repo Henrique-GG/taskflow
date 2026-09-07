@@ -7,12 +7,10 @@ Qualidade e Operações/Infraestrutura) e avalia a organização das atividades.
 
 | Papel                      | Responsável | Escopo no Marco 1                                                                                 |
 | -------------------------- | ----------- | ------------------------------------------------------------------------------------------------- |
-| Desenvolvimento            | _a definir_ | Domínio, serviço, rotas HTTP e interface web (`src/`, `public/`)                                  |
-| Qualidade                  | _a definir_ | Suíte de testes, meta de cobertura, ESLint/Prettier, revisão de PR (`tests/`, configs de lint)    |
-| Operações / Infraestrutura | _a definir_ | GitHub Actions, proteção de branch, `docker-compose.yml`, segredos e releases (`.github/`, infra) |
+| Desenvolvimento            | Henrique | Domínio, serviço, rotas HTTP e interface web (`src/`, `public/`)                                  |
+| Qualidade                  | Henrique | Suíte de testes, meta de cobertura, ESLint/Prettier, revisão de PR (`tests/`, configs de lint)    |
+| Operações / Infraestrutura | Henrique | GitHub Actions, proteção de branch, `docker-compose.yml`, segredos e releases (`.github/`, infra) |
 
-> Preencher a coluna de responsáveis com os nomes do grupo antes da avaliação, e
-> refletir a mesma divisão no arquivo `.github/CODEOWNERS`.
 
 ## Como as atividades são organizadas
 
