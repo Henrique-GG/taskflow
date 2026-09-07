@@ -7,10 +7,9 @@ Qualidade e Operações/Infraestrutura) e avalia a organização das atividades.
 
 | Papel                      | Responsável | Escopo no Marco 1                                                                                 |
 | -------------------------- | ----------- | ------------------------------------------------------------------------------------------------- |
-| Desenvolvimento            | Henrique | Domínio, serviço, rotas HTTP e interface web (`src/`, `public/`)                                  |
-| Qualidade                  | Henrique | Suíte de testes, meta de cobertura, ESLint/Prettier, revisão de PR (`tests/`, configs de lint)    |
-| Operações / Infraestrutura | Henrique | GitHub Actions, proteção de branch, `docker-compose.yml`, segredos e releases (`.github/`, infra) |
-
+| Desenvolvimento            | Henrique    | Domínio, serviço, rotas HTTP e interface web (`src/`, `public/`)                                  |
+| Qualidade                  | Henrique    | Suíte de testes, meta de cobertura, ESLint/Prettier, revisão de PR (`tests/`, configs de lint)    |
+| Operações / Infraestrutura | Henrique    | GitHub Actions, proteção de branch, `docker-compose.yml`, segredos e releases (`.github/`, infra) |
 
 ## Como as atividades são organizadas
 
