@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TaskFlow — painel de tarefas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="topo">
+      <h1>TaskFlow</h1>
+      <p class="subtitulo">O que vence primeiro, e quanto tempo ainda sobra.</p>
+    </header>
+
+    <main>
+      <section class="regua" aria-labelledby="regua-titulo">
+        <h2 id="regua-titulo" class="titulo-secao">Próximos 14 dias</h2>
+        <div class="regua-trilho" id="regua" role="img" aria-label="Linha do tempo de prazos">
+          <div class="regua-linha"></div>
+          <div class="regua-dias" id="regua-dias"></div>
+        </div>
+        <dl class="contadores" id="contadores">
+          <div>
+            <dt>tarefas</dt>
+            <dd id="c-total">0</dd>
+          </div>
+          <div>
+            <dt>em aberto</dt>
+            <dd id="c-pendentes">0</dd>
+          </div>
+          <div class="atrasado">
+            <dt>atrasadas</dt>
+            <dd id="c-atrasadas">0</dd>
+          </div>
+          <div>
+            <dt>concluídas</dt>
+            <dd id="c-concluidas">0</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="nova" aria-labelledby="nova-titulo">
+        <h2 id="nova-titulo" class="titulo-secao">Nova tarefa</h2>
+        <div class="campos">
+          <label>
+            <span>Tarefa</span>
+            <input id="in-titulo" type="text" placeholder="Entregar o marco 1 de DevOps" />
+          </label>
+          <label>
+            <span>Matéria</span>
+            <input id="in-materia" type="text" list="materias" placeholder="Integração DevOps" />
+            <datalist id="materias">
+              <option value="Integração DevOps"></option>
+              <option value="Ai Es Da"></option>
+              <option value="An Pr Si"></option>
+              <option value="Bo III"></option>
+              <option value="De We"></option>
+            </datalist>
+          </label>
+          <label>
+            <span>Prazo</span>
+            <input id="in-prazo" type="date" />
+          </label>
+          <label>
+            <span>Prioridade</span>
+            <select id="in-prioridade">
+              <option value="baixa">baixa</option>
+              <option value="media" selected>média</option>
+              <option value="alta">alta</option>
+              <option value="urgente">urgente</option>
+            </select>
+          </label>
+          <button id="btn-adicionar" type="button">Adicionar tarefa</button>
+        </div>
+        <p class="aviso" id="aviso" role="status" hidden></p>
+      </section>
+
+      <section class="lista-secao" aria-labelledby="lista-titulo">
+        <div class="lista-cabecalho">
+          <h2 id="lista-titulo" class="titulo-secao">Tarefas</h2>
+          <div class="filtros" role="group" aria-label="Filtrar por situação">
+            <button type="button" class="filtro ativo" data-status="">todas</button>
+            <button type="button" class="filtro" data-status="pendente">em aberto</button>
+            <button type="button" class="filtro" data-status="concluida">concluídas</button>
+          </div>
+        </div>
+        <ul class="lista" id="lista"></ul>
+        <p class="vazio" id="vazio">Nenhuma tarefa por aqui. Adicione a primeira acima.</p>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

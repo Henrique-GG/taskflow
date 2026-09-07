@@ -1,0 +1,360 @@
+:root {
+  --tinta: #1d2b2a;
+  --tinta-fraca: #5f716e;
+  --papel: #f3f5f2;
+  --superficie: #ffffff;
+  --pauta: #d3dad4;
+  --atraso: #b3402c;
+  --feito: #4a7a5c;
+  --margem: #c96a56;
+  --fonte: 'Bricolage Grotesque', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0 1.25rem 4rem;
+  background: var(--papel);
+  color: var(--tinta);
+  font-family: var(--fonte);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+main,
+.topo {
+  max-width: 62rem;
+  margin: 0 auto;
+}
+
+.topo {
+  padding: 3.5rem 0 2rem;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(2.75rem, 9vw, 4.5rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 0.95;
+}
+
+.subtitulo {
+  margin: 0.6rem 0 0;
+  max-width: 34ch;
+  color: var(--tinta-fraca);
+  font-size: 1.05rem;
+}
+
+.titulo-secao {
+  margin: 0 0 0.9rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--tinta-fraca);
+}
+
+section {
+  margin-bottom: 2.75rem;
+}
+
+/* Régua de prazos */
+.regua-trilho {
+  position: relative;
+  padding: 1.5rem 0 0.4rem;
+  overflow-x: auto;
+}
+
+.regua-linha {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 1.5rem;
+  height: 2px;
+  background: var(--tinta);
+}
+
+.regua-dias {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(2.5rem, 1fr);
+  min-width: 36rem;
+}
+
+.dia {
+  position: relative;
+  padding-top: 0.55rem;
+  text-align: center;
+  font-size: 0.7rem;
+  color: var(--tinta-fraca);
+}
+
+.dia::before {
+  content: '';
+  position: absolute;
+  top: -0.4rem;
+  left: 50%;
+  width: 1px;
+  height: 0.5rem;
+  background: var(--pauta);
+}
+
+.dia.marco::before {
+  height: 0.85rem;
+  top: -0.75rem;
+  background: var(--tinta);
+}
+
+.dia.hoje {
+  color: var(--tinta);
+  font-weight: 600;
+}
+
+.dia .numero {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--tinta);
+}
+
+.pontos {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+  min-height: 0.9rem;
+  margin-top: 0.3rem;
+}
+
+.ponto {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--tinta);
+}
+
+.ponto.urgente {
+  background: var(--atraso);
+}
+
+.contadores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2.25rem;
+  margin: 1.75rem 0 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--pauta);
+}
+
+.contadores div {
+  display: flex;
+  flex-direction: column-reverse;
+}
+
+.contadores dt {
+  font-size: 0.8rem;
+  color: var(--tinta-fraca);
+}
+
+.contadores dd {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+}
+
+.contadores .atrasado dd {
+  color: var(--atraso);
+}
+
+/* Formulário */
+.campos {
+  display: grid;
+  grid-template-columns: 2fr 1.2fr 0.9fr 0.8fr auto;
+  gap: 0.75rem;
+  align-items: end;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  color: var(--tinta-fraca);
+}
+
+input,
+select {
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--tinta);
+  background: var(--superficie);
+  border: 1px solid var(--pauta);
+  border-radius: 3px;
+  padding: 0.6rem 0.7rem;
+}
+
+input:focus-visible,
+select:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--tinta);
+  outline-offset: 2px;
+}
+
+button {
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--tinta);
+  border-radius: 3px;
+  background: var(--tinta);
+  color: var(--papel);
+  padding: 0.65rem 1.1rem;
+}
+
+button:hover {
+  background: #2c3f3d;
+}
+
+.aviso {
+  margin: 0.85rem 0 0;
+  padding: 0.6rem 0.75rem;
+  border-left: 3px solid var(--atraso);
+  background: var(--superficie);
+  color: var(--atraso);
+  font-size: 0.9rem;
+}
+
+/* Lista */
+.lista-cabecalho {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.filtros {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.filtro {
+  background: transparent;
+  color: var(--tinta-fraca);
+  border-color: transparent;
+  padding: 0.3rem 0.65rem;
+  font-weight: 400;
+}
+
+.filtro:hover {
+  background: transparent;
+  color: var(--tinta);
+}
+
+.filtro.ativo {
+  color: var(--tinta);
+  font-weight: 600;
+  border-color: var(--pauta);
+  background: var(--superficie);
+}
+
+.lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--pauta);
+}
+
+.item {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 0.75rem 1rem;
+  align-items: center;
+  padding: 0.95rem 0 0.95rem 1rem;
+  border-bottom: 1px solid var(--pauta);
+  border-left: 2px solid transparent;
+  background: linear-gradient(var(--superficie), var(--superficie)) padding-box;
+}
+
+.item.atrasada {
+  border-left-color: var(--margem);
+}
+
+.item.concluida .titulo-tarefa {
+  color: var(--tinta-fraca);
+  text-decoration: line-through;
+}
+
+.titulo-tarefa {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.meta {
+  margin-top: 0.15rem;
+  font-size: 0.82rem;
+  color: var(--tinta-fraca);
+}
+
+.prazo {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.85rem;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.prazo strong {
+  display: block;
+  font-size: 1.05rem;
+}
+
+.item.atrasada .prazo strong {
+  color: var(--atraso);
+}
+
+.item.concluida .prazo strong {
+  color: var(--feito);
+}
+
+.acoes {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.acoes button {
+  background: transparent;
+  color: var(--tinta);
+  border-color: var(--pauta);
+  font-size: 0.82rem;
+  font-weight: 400;
+  padding: 0.35rem 0.65rem;
+}
+
+.acoes button:hover {
+  background: var(--papel);
+}
+
+.vazio {
+  padding: 1.75rem 0;
+  color: var(--tinta-fraca);
+}
+
+@media (max-width: 720px) {
+  .campos {
+    grid-template-columns: 1fr 1fr;
+  }
+  .campos label:first-child,
+  #btn-adicionar {
+    grid-column: 1 / -1;
+  }
+  .item {
+    grid-template-columns: 1fr auto;
+  }
+  .acoes {
+    grid-column: 1 / -1;
+  }
+}
