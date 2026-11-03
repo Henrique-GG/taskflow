@@ -1,0 +1,112 @@
+name: Build & Publish Docker Image
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*.*.*']
+  pull_request:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  # O GHCR so aceita nome de imagem em minusculas. Usar github.repository
+  # aqui traria "Henrique-GG/taskflow" e o push seria recusado.
+  IMAGE_NAME: henrique-gg/taskflow
+
+jobs:
+  build-and-push:
+    name: Publicar imagem no GHCR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  deploy-homologacao:
+    name: Deploy em homologacao (simulado)
+    needs: build-and-push
+    # Em Pull Request a imagem nao chega a ser publicada, entao nao ha o
+    # que implantar: o deploy roda apenas na main e nas tags de versao.
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    environment: homologacao
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Definir a tag a implantar
+        id: tag
+        run: |
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            echo "valor=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "valor=latest" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Subir a stack com a imagem publicada
+        env:
+          TAG: ${{ steps.tag.outputs.valor }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+        run: |
+          echo "Implantando a imagem ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$TAG"
+          docker compose -f docker-compose.homolog.yml up -d
+
+      - name: Validar o deploy pelo health check
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:3000/api/health > /dev/null; then
+              echo "Deploy validado: a aplicacao respondeu ao health check."
+              curl -s http://localhost:3000/api/health
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "A aplicacao nao respondeu. Logs da stack:"
+          docker compose -f docker-compose.homolog.yml logs
+          exit 1
+
+      - name: Derrubar a stack
+        if: always()
+        env:
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+        run: docker compose -f docker-compose.homolog.yml down -v

@@ -1,22 +1,43 @@
-# Sobe o Postgres local para desenvolvimento e para os testes de integracao.
-# O container da aplicacao entra na entrega A2, junto com o Dockerfile.
+# Sobe a aplicacao integrada com o banco de dados.
+# Uso local:  docker compose up --build
+# As credenciais vem de variaveis de ambiente (arquivo .env, fora do Git).
+# Os valores padrao abaixo sao de desenvolvimento e nao sao credenciais reais.
 services:
   db:
     image: postgres:16-alpine
     container_name: taskflow-db
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: taskflow
-      POSTGRES_PASSWORD: taskflow
-      POSTGRES_DB: taskflow
+      POSTGRES_USER: ${POSTGRES_USER:-taskflow}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-taskflow_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-taskflow}
     ports:
       - '5432:5432'
     volumes:
       - taskflow-db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U taskflow']
-      interval: 10s
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-taskflow}']
+      interval: 5s
       timeout: 5s
       retries: 5
+
+  api:
+    build: .
+    image: ghcr.io/henrique-gg/taskflow:${TAG:-local}
+    container_name: taskflow-api
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      # Sem esta variavel a aplicacao sobe com repositorio em memoria
+      # e ignora o banco de dados por completo.
+      REPO_DRIVER: postgres
+      DATABASE_URL: postgres://${POSTGRES_USER:-taskflow}:${POSTGRES_PASSWORD:-taskflow_dev}@db:5432/${POSTGRES_DB:-taskflow}
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
   taskflow-db-data:

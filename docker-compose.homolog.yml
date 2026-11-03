@@ -1,0 +1,31 @@
+# Ambiente de homologacao simulado: usa a IMAGEM JA PUBLICADA no GHCR,
+# em vez de construir a partir do codigo. E a diferenca entre testar o
+# que acabou de ser compilado e testar o artefato que foi entregue.
+# As credenciais vem dos Secrets do GitHub, nunca de valores fixos.
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    image: ghcr.io/henrique-gg/taskflow:${TAG:-latest}
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      REPO_DRIVER: postgres
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+    depends_on:
+      db:
+        condition: service_healthy
