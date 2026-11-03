@@ -1,6 +1,8 @@
-# Todo o repositorio exige revisao do responsavel padrao.
-*                       @Henrique-GG
+# Todo o repositorio exige revisao de um dos responsaveis.
+*                               @Henrique-GG
 
-# Areas de Operacoes/Infraestrutura.
-/.github/               @Henrique-GG
-/docker-compose.yml     @Henrique-GG
+# Operacoes / Infraestrutura.
+/.github/                       @Henrique-GG @ianfogr
+/Dockerfile                     @Henrique-GG @ianfogr
+/docker-compose.yml             @Henrique-GG @ianfogr
+/docker-compose.homolog.yml     @Henrique-GG @ianfogr
