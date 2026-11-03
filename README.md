@@ -148,12 +148,15 @@ padrão Conventional Commits.
 
 - **A1 — Marco 1 (CI e conteinerização inicial):** repositório estruturado,
   testes automatizados e pipeline de CI operacional. ✅
-- **A2 — Fase 2 (IaC e CD):** Dockerfile, orquestração via Compose, publicação
-  de imagem no GHCR, gestão de segredos, versionamento semântico e rollback.
+- **A2 — Fase 2 (IaC e CD):** Dockerfile multi-stage, orquestração via Compose,
+  publicação de imagem no GHCR, gestão de segredos, versionamento semântico e
+  rollback automatizado. ✅
 - **A3 — Fase 3 (DevSecOps e observabilidade):** SAST com Trivy/SonarQube,
   instrumentação de logs e métricas, dashboard no Grafana e demo ao vivo.
 
 ## Autoria
 
-Henrique — Ciência da Computação, CEUB.
+Henrique Guimarães Gonçalves e Ian Felipe — Ciência da Computação, CEUB.
 Disciplina Integração DevOps, 2026/2, Prof. Danilo Silva.
+
+A divisão de papéis está em [`docs/papeis-e-organizacao.md`](docs/papeis-e-organizacao.md).
