@@ -2,9 +2,9 @@ import { z } from 'zod';
 import { PRIORITIES, STATUSES } from './task.js';
 
 export const createTaskSchema = z.object({
-  title: z.string({ required_error: 'Informe o titulo da tarefa.' }),
-  subject: z.string({ required_error: 'Informe a materia da tarefa.' }),
-  dueDate: z.string({ required_error: 'Informe a data de entrega.' }),
+  title: z.string({ error: 'Informe o titulo da tarefa.' }),
+  subject: z.string({ error: 'Informe a materia da tarefa.' }),
+  dueDate: z.string({ error: 'Informe a data de entrega.' }),
   priority: z.enum(PRIORITIES).optional(),
 });
 
