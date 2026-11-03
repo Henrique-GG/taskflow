@@ -57,22 +57,36 @@ e o que seria implantado apareceu no pipeline, e nao depois.
 O rollback nao reconstroi nada e nao depende do codigo-fonte: ele aponta o
 ambiente para uma imagem que ja foi construida, publicada e validada antes.
 
+### Pelo pipeline (forma usada no projeto)
+
+O workflow `.github/workflows/rollback.yml` e acionado manualmente em
+**Actions > Rollback > Run workflow**, informando a versao de destino.
+
+Ele confere se a versao existe no registry, sobe a stack com essa imagem,
+valida pelo endpoint de health, registra no resumo da execucao qual imagem
+ficou no ar e quanto tempo levou, e derruba o ambiente ao final.
+
+As credenciais vem dos Secrets do repositorio; nenhuma senha trafega pelo
+formulario ou fica registrada no log.
+
+A vantagem de acionar pelo pipeline em vez da linha de comando e que cada
+rollback fica registrado no historico do Actions, com autor, horario,
+versao de destino e resultado.
+
+### Pela linha de comando (alternativa local)
+
 ```bash
 # versao atual em homologacao
 TAG=0.2.1 docker compose -f docker-compose.homolog.yml up -d
-curl http://localhost:3000/api/health
 
 # rollback para a versao anterior
 TAG=0.2.0 docker compose -f docker-compose.homolog.yml up -d
-curl http://localhost:3000/api/health
 
 # confirmar qual imagem esta no ar
 docker compose -f docker-compose.homolog.yml images
 ```
 
-As credenciais vem de um arquivo `.env` local, fora do controle de versao.
-
-Tempo medido ate o servico voltar: _preencher apos a execucao_.
+Requer um arquivo `.env` local com as credenciais, fora do controle de versao.
 
 ## Por que funciona
 
@@ -84,7 +98,6 @@ minutos.
 
 ## Evidencias
 
-- Print: imagem publicada no GHCR com as duas versoes
-- Print: execucao do pipeline que falhou (manifest unknown) e a seguinte, corrigida
-- Print: aplicacao respondendo na versao mais recente
-- Print: aplicacao respondendo na versao anterior apos o rollback
+- Print: imagem publicada no GHCR com as versoes `0.2.0`, `0.2.1` e `latest`
+- Print: execucao do pipeline que falhou (`manifest unknown`) e a seguinte, corrigida
+- Print: execucao do workflow Rollback apontando para `0.2.0`, com o resumo da versao implantada
