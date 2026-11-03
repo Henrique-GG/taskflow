@@ -1,0 +1,107 @@
+# Rollback acionado manualmente: implanta em homologacao uma versao
+# anterior ja publicada no registry, sem passar por build ou testes.
+# Acionar em Actions > Rollback > Run workflow.
+name: Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      versao:
+        description: 'Versao da imagem para a qual voltar (ex: 0.2.0)'
+        required: true
+        default: '0.2.0'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: henrique-gg/taskflow
+
+jobs:
+  rollback:
+    name: Rollback em homologacao
+    runs-on: ubuntu-latest
+    environment: homologacao
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Conferir se a versao existe no registry
+        run: |
+          IMAGEM="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.versao }}"
+          echo "Procurando $IMAGEM"
+          if ! docker manifest inspect "$IMAGEM" > /dev/null 2>&1; then
+            echo "::error::A versao ${{ inputs.versao }} nao existe no registry. Confira as tags publicadas em Packages."
+            exit 1
+          fi
+          echo "Versao encontrada."
+
+      - name: Implantar a versao anterior
+        env:
+          TAG: ${{ inputs.versao }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+        run: |
+          INICIO=$(date +%s)
+          docker compose -f docker-compose.homolog.yml up -d
+          echo "INICIO=$INICIO" >> "$GITHUB_ENV"
+
+      - name: Validar pelo health check
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:3000/api/health > /dev/null; then
+              FIM=$(date +%s)
+              echo "DURACAO=$(( FIM - INICIO ))" >> "$GITHUB_ENV"
+              echo "Rollback concluido. A aplicacao respondeu ao health check."
+              curl -s http://localhost:3000/api/health
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::A aplicacao nao respondeu apos o rollback."
+          docker compose -f docker-compose.homolog.yml logs
+          exit 1
+
+      - name: Registrar a imagem em execucao
+        env:
+          TAG: ${{ inputs.versao }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+        run: |
+          {
+            echo "## Rollback concluido"
+            echo ""
+            echo "| Item | Valor |"
+            echo "| --- | --- |"
+            echo "| Versao implantada | \`${{ inputs.versao }}\` |"
+            echo "| Imagem | \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.versao }}\` |"
+            echo "| Tempo ate responder | ${DURACAO}s |"
+            echo "| Acionado por | @${{ github.actor }} |"
+            echo ""
+            echo "### Imagens em execucao"
+            echo ""
+            echo '```'
+            docker compose -f docker-compose.homolog.yml images
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          docker compose -f docker-compose.homolog.yml images
+
+      - name: Derrubar a stack
+        if: always()
+        env:
+          TAG: ${{ inputs.versao }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+        run: docker compose -f docker-compose.homolog.yml down -v
