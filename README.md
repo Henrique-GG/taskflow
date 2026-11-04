@@ -8,6 +8,7 @@ concentra a trilha de **Integração DevOps** — versionamento, testes automati
 pipeline e infraestrutura.
 
 [![CI](https://github.com/Henrique-GG/taskflow/actions/workflows/ci.yml/badge.svg)](https://github.com/Henrique-GG/taskflow/actions/workflows/ci.yml)
+[![CD](https://github.com/Henrique-GG/taskflow/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/Henrique-GG/taskflow/actions/workflows/docker-publish.yml)
 
 ## Stack
 
@@ -20,7 +21,9 @@ pipeline e infraestrutura.
 | Banco     | PostgreSQL 16 (com fallback em memória) |
 | Testes    | Vitest + Supertest                      |
 | Qualidade | ESLint + Prettier                       |
-| CI        | GitHub Actions                          |
+| CI/CD     | GitHub Actions                          |
+| Imagem    | Docker (multi-stage) + Docker Compose   |
+| Registry  | GitHub Container Registry (GHCR)        |
 | Interface | HTML, CSS e JavaScript sem build        |
 
 ## Arquitetura
@@ -44,24 +47,46 @@ validar o SQL de verdade no pipeline, onde o CI sobe um container de Postgres.
 
 ## Rodando localmente
 
+### Com Docker (recomendado)
+
+Sobe a aplicação e o PostgreSQL juntos, com um comando:
+
 ```bash
 git clone https://github.com/Henrique-GG/taskflow.git
 cd taskflow
+docker compose up --build
+```
+
+Abra `http://localhost:3000`. O Compose espera o banco ficar saudável
+(`pg_isready`) antes de subir a aplicação, e as migrations rodam sozinhas.
+
+Para usar credenciais próprias, crie um `.env` a partir do `.env.example`. Os
+valores padrão são de desenvolvimento e não são credenciais reais.
+
+### Sem Docker
+
+```bash
 npm ci
 cp .env.example .env
 npm run dev
 ```
 
-Abra `http://localhost:3000`.
-
-### Com PostgreSQL
+Nesse modo a aplicação sobe com repositório em memória, sem precisar de banco.
+Para apontar para um PostgreSQL:
 
 ```bash
 docker compose up -d db
-REPO_DRIVER=postgres DATABASE_URL=postgres://taskflow:taskflow@localhost:5432/taskflow npm run dev
+REPO_DRIVER=postgres DATABASE_URL=postgres://taskflow:taskflow_dev@localhost:5432/taskflow npm run dev
 ```
 
-As migrations rodam sozinhas na inicialização (`src/db/migrations/001_init.sql`).
+> A variável `REPO_DRIVER` é obrigatória: sem ela a aplicação usa o repositório
+> em memória e ignora o banco.
+
+### A partir da imagem publicada
+
+```bash
+docker pull ghcr.io/henrique-gg/taskflow:latest
+```
 
 ## Scripts
 
@@ -136,6 +161,49 @@ da data em que a suíte roda.
 
 `.github/workflows/commit-lint.yml` valida as mensagens de commit do PR contra o
 padrão Conventional Commits.
+
+## Entrega contínua (CD)
+
+`.github/workflows/docker-publish.yml` dispara a cada push na `main` e a cada
+tag de versão `v*.*.*`:
+
+```
+┌─ publicar ───────────────┐      ┌─ homologacao ────────────────┐
+│ build da imagem          │      │ baixa a imagem publicada     │
+│ tags derivadas do Git    │ ───► │ sobe a stack com o banco     │
+│ push para o GHCR         │      │ valida pelo health check     │
+└──────────────────────────┘      └──────────────────────────────┘
+```
+
+O ambiente de homologação é simulado dentro do runner. Ele consome a **imagem
+publicada no registry**, e não o código do repositório — é o que garante que o
+artefato entregue é o mesmo que foi validado.
+
+As credenciais vêm dos Secrets do repositório (`POSTGRES_USER`,
+`POSTGRES_PASSWORD`, `POSTGRES_DB`). Nenhuma senha está versionada.
+
+### Versionamento das imagens
+
+Imagem: [`ghcr.io/henrique-gg/taskflow`](https://github.com/Henrique-GG/taskflow/pkgs/container/taskflow)
+
+| Referência no Git | Tags geradas na imagem                |
+| ----------------- | ------------------------------------- |
+| tag `v0.2.0`      | `0.2.0`, `0.2`, `latest`, `sha-<...>` |
+| push na `main`    | `main`, `latest`, `sha-<...>`         |
+
+A tag com o SHA permite rastrear qualquer imagem até o commit que a originou.
+
+### Rollback
+
+`.github/workflows/rollback.yml` é acionado manualmente em **Actions → Rollback
+→ Run workflow**, informando a versão de destino.
+
+Ele confere se a versão existe no registry, implanta, valida pelo health check e
+registra no resumo da execução qual imagem ficou no ar e quanto tempo levou.
+Como não há build nem testes no caminho, o rollback leva cerca de 13 segundos.
+
+O procedimento e o post-mortem de um incidente real de deploy estão em
+[`docs/rollback.md`](docs/rollback.md).
 
 ## Convenções do repositório
 
